@@ -1,0 +1,73 @@
+{
+  "variables": {
+    "iso_location": "/home/iqbal/ISO/",
+    "harddisk_size": "80960",
+    "vm_name": "AliYun-OL7.4-v1"
+  },
+  "builders": [
+  {
+    "vm_name": "{{user `vm_name`}}",
+    "type": "qemu",
+    "headless": true,
+
+    "accelerator": "kvm",
+    "boot_command": [
+      "<tab> net.ifnames=0 biosdevname=0 text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/OEL7_2-x86_64/ks_cloud.cfg<enter><wait>"
+    ],
+
+    "disk_interface": "virtio",
+    "disk_size": 49000,
+
+    "format": "raw",
+
+    "http_directory": "http",
+    "http_port_max": 10089,
+    "http_port_min": 10082,
+
+    "iso_url": "{{user `iso_location`}}/OL-73.iso",
+    "iso_checksum": "e44eff40f3a16ffa008285e5c52e1199",
+    "iso_checksum_type": "MD5",
+    
+    "net_device": "virtio-net",
+    "qemu_binary" : "/usr/bin/qemu-kvm",
+    "qemuargs": [
+        ["-m","4096M"],
+        ["-machine", "type=pc,accel=kvm"],
+        ["-device","virtio-net-pci,netdev=user.0"]
+    ],
+    "shutdown_command": "/sbin/halt -h -p",
+    "ssh_username": "root",
+    "ssh_password": "root",
+    "ssh_wait_timeout": "30000s",
+    "ssh_host_port_max": 2229,
+    "ssh_host_port_min": 2222,
+    "ssh_port": 22
+  }
+  ],
+  "provisioners": [ 
+  {
+    "type": "file",
+    "source": "upload/pwquality.conf",
+    "destination": "/etc/security/pwquality.conf",
+    "only": ["qemu"]
+  },
+  {
+    "type": "file",
+    "source": "upload/login.def",
+    "destination" : "/etc/login.def",
+    "only": ["qemu"]
+  },
+  {
+    "type": "shell",
+    "scripts": 
+      "scripts/ol7_post.sh",
+     "only": ["qemu"]
+  },
+  {
+    "type": "file",
+    "source": "upload/cloud.cfg",
+    "destination": "/etc/cloud/cloud.cfg",
+    "only": ["qemu"]
+  }
+  ]
+}
